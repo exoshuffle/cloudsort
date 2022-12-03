@@ -1,7 +1,7 @@
 # pylint: disable=use-dict-literal
 import os
 
-from raysort.config.common import (
+from cloudsort.config.common import (
     InstanceType,
     JobConfig,
     SpillingMode,

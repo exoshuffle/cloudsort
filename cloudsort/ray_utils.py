@@ -2,8 +2,8 @@ import logging
 
 import ray
 
-from raysort import constants
-from raysort.config import AppConfig, JobConfig
+from cloudsort import constants
+from cloudsort.config import AppConfig, JobConfig
 
 KiB = 1024
 MiB = KiB * 1024

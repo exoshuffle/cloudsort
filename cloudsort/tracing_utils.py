@@ -1,20 +1,17 @@
 import collections
-import dataclasses
 import functools
 import json
 import logging
 import os
-import re
 import time
-from typing import Callable, Dict
+from typing import Callable
 
+import pandas as pd
 import ray
-import wandb
-import yaml
 from ray.util import metrics
 
-from raysort import constants, logging_utils
-from raysort.config import JobConfig
+from cloudsort import constants, logging_utils
+from cloudsort.config import JobConfig
 
 Span = collections.namedtuple(
     "Span",
@@ -28,11 +25,9 @@ class timeit:
         self,
         event: str,
         report_completed: bool = True,
-        log_to_wandb: bool = False,
     ):
         self.event = event
         self.report_completed = report_completed
-        self.log_to_wandb = log_to_wandb
         self.tracker = None
         self.begin_time = time.time()
 
@@ -60,7 +55,6 @@ class timeit:
                 ray.util.get_node_ip_address(),
                 os.getpid(),
             ),
-            log_to_wandb=self.log_to_wandb,
         )
         if self.report_completed:
             tracker.inc.remote(
@@ -106,25 +100,6 @@ def _make_trace_event(span: Span):
     }
 
 
-# pylint: disable=protected-access
-def _get_spilling_stats(print_ray_stats: bool = False) -> Dict[str, float]:
-    summary = ray._private.internal_api.memory_summary(stats_only=True)
-    if print_ray_stats:
-        print(summary)
-
-    def mib_to_gb(x: float) -> float:
-        return x * 1024 * 1024 / 1000**3
-
-    def extract_gb(regex: str) -> float:
-        matches = re.findall(regex, summary)
-        return mib_to_gb(float(matches[0])) if len(matches) > 0 else 0
-
-    return {
-        "spilled_gb": extract_gb(r"Spilled (\d+) MiB"),
-        "restored_gb": extract_gb(r"Restored (\d+) MiB"),
-    }
-
-
 class _DefaultDictWithKey(collections.defaultdict):
     def __missing__(self, key):
         if self.default_factory:
@@ -143,39 +118,22 @@ def symlink(src: str, dst: str, **kwargs):
 
 @ray.remote(resources={"head": 1e-3})
 class ProgressTracker:
-    def __init__(self, job_cfg: JobConfig, project: str = "raysort"):
+    def __init__(self, job_cfg: JobConfig):
         self.job_cfg = job_cfg
         self.counts = collections.defaultdict(int)
         self.gauges = _DefaultDictWithKey(metrics.Gauge)
         self.series = collections.defaultdict(list)
         self.spans = []
-        self.initial_spilling_stats = _get_spilling_stats()
         self.start_time = None
         logging_utils.init()
-        try:
-            wandb.init(entity="raysort", project=project)
-        except wandb.errors.UsageError as e:
-            if "call wandb.login" in e.message:
-                wandb.init(mode="offline")
-            else:
-                raise e
-        wandb.config.update(dataclasses.asdict(job_cfg))
-        wandb.config.update(
-            {k: v for k, v in os.environ.items() if k.startswith("RAY_")}
-        )
-        if os.path.exists(constants.RAY_SYSTEM_CONFIG_FILE):
-            with open(constants.RAY_SYSTEM_CONFIG_FILE) as fin:
-                wandb.config.update(yaml.safe_load(fin))
-        logging.info(wandb.config)
+        logging.info(job_cfg)
 
-    def inc(self, metric: str, value: int = 1, echo=False, log_to_wandb=False):
+    def inc(self, metric: str, value: int = 1, echo=False):
         new_value = self.counts[metric] + value
         self.counts[metric] = new_value
         self.gauges[metric].set(new_value)
         if echo:
             logging.info("%s %s", metric, new_value)
-        if log_to_wandb:
-            wandb.log({metric: new_value})
 
     def dec(self, metric: str, value: int = 1, echo=False):
         return self.inc(metric, -value, echo)
@@ -186,20 +144,17 @@ class ProgressTracker:
         value: float,
         relative_to_start=False,
         echo=False,
-        log_to_wandb=False,
     ):
         if relative_to_start and self.start_time:
             value -= self.start_time
         self.series[metric].append(value)
         if echo:
             logging.info("%s %s", metric, value)
-        if log_to_wandb:
-            wandb.log({metric: value})
 
-    def record_span(self, span: Span, also_record_value=True, log_to_wandb=False):
+    def record_span(self, span: Span, also_record_value=True):
         self.spans.append(span)
         if also_record_value:
-            self.record_value(span.event, span.duration, log_to_wandb=log_to_wandb)
+            self.record_value(span.event, span.duration)
         if len(self.spans) % SAVE_SPANS_EVERY == 0:
             self.save_trace()
 
@@ -207,8 +162,6 @@ class ProgressTracker:
         self.start_time = time.time()
 
     def report(self):
-        import pandas as pd
-
         ret = []
         for key, values in self.series.items():
             ss = pd.Series(values)
@@ -232,26 +185,15 @@ class ProgressTracker:
         self.job_cfg.app.worker_ids = []
         self.job_cfg.app.worker_ips = []
         self.job_cfg.app.worker_ip_to_id = {}
-        print(self.job_cfg)
-        wandb.log({"performance_summary": wandb.Table(dataframe=df)})
-        wandb.finish()
+        print(self.job_cfg, flush=True)
 
-    def report_spilling(self):
-        stats = _get_spilling_stats(print_ray_stats=True)
-        for k, v in stats.items():
-            v0 = self.initial_spilling_stats.get(k, 0)
-            wandb.log({k: v - v0})
-
-    def save_trace(self, save_to_wandb=False):
+    def save_trace(self):
         ret = [_make_trace_event(span) for span in self.spans]
-        filename = f"/tmp/raysort-{self.start_time}.json"
+        filename = f"/tmp/cloudsort-{self.start_time}.json"
         with open(filename, "w") as fout:
             json.dump(ret, fout)
-        symlink(filename, "/tmp/raysort-latest.json")
-        if save_to_wandb:
-            wandb.save(filename, base_path="/tmp")
+        symlink(filename, "/tmp/cloudsort-latest.json")
 
     def performance_report(self):
-        self.save_trace(save_to_wandb=True)
-        self.report_spilling()
+        self.save_trace()
         self.report()

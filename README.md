@@ -10,13 +10,13 @@ To run Exoshuffle-CloudSort, you will need:
 * A head node of size `r6i.2xlarge`
 * 40 empty Amazon S3 buckets (you can use the [Terraform template](https://github.com/exoshuffle/cloudsort/tree/master/scripts/config/terraform/aws-s3-template) to create them)
 
-On the head node, you need to install Python 3.9.13 (Anaconda recommended), then run:
+The easiest way to setup the head node is to launch it with the provide image [raysort-worker-20221011](https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#ImageDetails:imageId=ami-07bf3818d912ab0ed). Alternatively, install Python 3.9.13 with Anaconda, then run:
 
-```
+```bash
 pip install -Ur requirements/dev.txt
 pip install -Ur requirements/worker.txt
 pip install -e .
-pushd raysort/sortlib && python setup.py build_ext --inplace && popd
+pushd cloudsort/sortlib && python setup.py build_ext --inplace && popd
 scripts/installers/install_binaries.sh
 ```
 
@@ -28,17 +28,19 @@ The easiest way to start up a cluster of worker nodes is by using the [cls.py](h
 
 1. Install Terraform: `scripts/installers/install_terraform.sh`
 2. Run `export CONFIG=2tb-2gb-i4i4x-s3 && python scripts/cls.py up --ray` to launch a Ray cluster
-3. Run a test run on the cluster: `python raysort/main.py 2>&1 | tee main.log`
+3. Run a test run on the cluster: `python cloudsort/main.py 2>&1 | tee main.log`
 
-The `2tb-2gb-i4i4x-s3` config launches 10 `i4i.4xlarge` nodes, and runs a 1TB sort with 2GB partitions using 10 S3 buckets for I/O.
+The `2tb-2gb-i4i4x-s3` config launches 10 `i4i.4xlarge` nodes, and runs a 1TB sort with 2GB partitions using 10 S3 buckets for I/O. The expected sorting time is around 400 seconds.
 
 ## Running the 100TB Benchmark
 
 To run the 100TB CloudSort benchmark, use the following command:
 
+```bash
+export STEPS= && export CONFIG=100tb-2gb-i4i4x-s3 && python scripts/cls.py up --ray && python cloudsort/main.py 2>&1 | tee main.log
 ```
-export STEPS= && export CONFIG=100tb-2gb-i4i4x-s3 && python scripts/cls.py up --ray && python raysort/main.py 2>&1 | tee main.log
-```
+
+If `STEPS` is empty, the program will run all three steps: generate input, sort, and validate output. You can also specify the steps to run, e.g. `STEPS=sort,validate_output`. The expected sorting time is around 5400 seconds.
 
 You can get runtime metrics using Prometheus and Grafana.
 

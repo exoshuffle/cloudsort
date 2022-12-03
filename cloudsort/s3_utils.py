@@ -9,9 +9,9 @@ import botocore
 import numpy as np
 from boto3.s3 import transfer
 
-from raysort import constants, s3_custom
-from raysort.config import AppConfig
-from raysort.typing import PartInfo, Path
+from cloudsort import constants, s3_custom
+from cloudsort.config import AppConfig
+from cloudsort.typing import PartInfo, Path
 
 MULTIPART_CHUNKSIZE = 16 * 1024 * 1024
 

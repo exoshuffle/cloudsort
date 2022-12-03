@@ -7,7 +7,7 @@
     mnt_paths:
       - /mnt/data0
     tmpfs_path: /mnt/tmpfs
-    workdir: ~/raysort
+    workdir: ~/cloudsort
     pythondir: ~/miniconda3/envs/raysort/bin
     clear_data_dir: false
     ray_object_manager_port: 8076
@@ -39,13 +39,13 @@
 
     - name: Clear tmpfs
       ansible.builtin.file:
-        path: "{{ tmpfs_path }}/raysort"
+        path: "{{ tmpfs_path }}/cloudsort"
         state: absent
 
-    - name: Clear raysort directories
+    - name: Clear cloudsort directories
       become: true
       ansible.builtin.file:
-        path: "{{ item }}/raysort"
+        path: "{{ item }}/cloudsort"
         state: absent
       loop: "{{ mnt_paths }}"
       when: clear_data_dir
@@ -53,14 +53,14 @@
     - name: Start node_exporter
       ansible.builtin.shell: >
         nohup
-        {{ workdir }}/raysort/bin/node_exporter/node_exporter
+        {{ workdir }}/cloudsort/bin/node_exporter/node_exporter
         --web.listen-address 0.0.0.0:8091 &
       changed_when: true
 
     - name: Start node_exporter (not sure why I have to do this twice)
       ansible.builtin.shell: >
         nohup
-        {{ workdir }}/raysort/bin/node_exporter/node_exporter
+        {{ workdir }}/cloudsort/bin/node_exporter/node_exporter
         --web.listen-address 0.0.0.0:8091 &
       changed_when: true
 

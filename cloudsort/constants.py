@@ -1,7 +1,7 @@
 import os
 from typing import List
 
-from raysort.typing import ByteCount, PartId, RecordCount
+from cloudsort.typing import ByteCount, PartId, RecordCount
 
 __DIR__ = os.path.dirname(os.path.abspath(__file__))
 
@@ -27,7 +27,7 @@ FILENAME_FMT = {
     "temp": "temp-{part_id:010x}",
 }
 SHARD_FMT = "{shard:04x}"
-TMPFS_PATH = "/mnt/tmpfs/raysort"
+TMPFS_PATH = "/mnt/tmpfs/cloudsort"
 
 # S3
 S3_MIN_CHUNK_SIZE = 5 * 1024 * 1024

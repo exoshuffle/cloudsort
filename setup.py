@@ -1,6 +1,6 @@
 from setuptools import setup
 
 setup(
-    name="raysort",
-    packages=["raysort"],
+    name="cloudsort",
+    packages=["cloudsort"],
 )

@@ -8,15 +8,15 @@ from typing import Iterable, Optional
 import numpy as np
 import ray
 
-from raysort import (
+from cloudsort import (
     constants,
     logging_utils,
     ray_utils,
     s3_utils,
     tracing_utils,
 )
-from raysort.config import AppConfig
-from raysort.typing import PartId, PartInfo, Path, RecordCount
+from cloudsort.config import AppConfig
+from cloudsort.typing import PartId, PartInfo, Path, RecordCount
 
 # ------------------------------------------------------------
 #     Loading and Saving Partitions

@@ -1,5 +1,5 @@
 # pylint: disable=use-dict-literal
-from raysort.config.common import (
+from cloudsort.config.common import (
     InstanceLifetime,
     InstanceType,
     JobConfig,

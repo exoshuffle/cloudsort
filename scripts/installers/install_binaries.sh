@@ -2,7 +2,7 @@
 
 set -ex
 
-BIN_DIR=raysort/bin
+BIN_DIR=cloudsort/bin
 
 prepare() {
     rm -rf $BIN_DIR

@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 import ray
 
-from raysort.typing import AppStep, InstanceLifetime, SpillingMode
+from cloudsort.typing import AppStep, InstanceLifetime, SpillingMode
 
 AZURE_CONTAINER = os.getenv("AZURE_CONTAINER")
 S3_BUCKET = os.getenv("S3_BUCKET")

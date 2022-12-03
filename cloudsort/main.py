@@ -6,7 +6,7 @@ from typing import Iterable, Union
 import numpy as np
 import ray
 
-from raysort import (
+from cloudsort import (
     config,
     constants,
     logging_utils,
@@ -15,8 +15,8 @@ from raysort import (
     sortlib,
     tracing_utils,
 )
-from raysort.config import AppConfig, JobConfig
-from raysort.typing import PartId, PartInfo
+from cloudsort.config import AppConfig, JobConfig
+from cloudsort.typing import PartId, PartInfo
 
 
 def flatten(xss: list[list]) -> list:
@@ -238,7 +238,7 @@ class NodeScheduler:
             self._wait_node()
 
     def _wait_node(self, num_returns: int = 1) -> None:
-        ready, _ = ray_utils.wait(
+        ready, _ = ray.wait(
             list(self.tasks_in_flight.keys()),
             num_returns=num_returns,
             fetch_local=False,
@@ -318,13 +318,14 @@ def main():
             sort_utils.generate_input(cfg)
 
         if cfg.sort:
-            with tracing_utils.timeit("sort", log_to_wandb=True):
+            with tracing_utils.timeit("sort"):
                 sort_main(cfg)
 
         if cfg.validate_output:
             sort_utils.validate_output(cfg)
     finally:
         ray.get(tracker.performance_report.remote())
+        time.sleep(5)
         ray.shutdown()
 
 

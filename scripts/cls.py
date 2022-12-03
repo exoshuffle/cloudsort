@@ -16,8 +16,8 @@ import ray
 import shell_utils
 import yaml
 
-from raysort import config
-from raysort.typing import InstanceLifetime
+from cloudsort import config
+from cloudsort.typing import InstanceLifetime
 
 cfg = config.get()
 
@@ -318,7 +318,7 @@ def setup_prometheus(head_ip: str, ips: List[str]) -> None:
     with open("/tmp/prometheus/service_discovery.json", "w") as fout:
         fout.write(get_prometheus_sd_content(head_ip, ips))
     free_port(PROMETHEUS_SERVER_PORT)
-    cmd = str(SCRIPT_DIR.parent / "raysort/bin/prometheus/prometheus")
+    cmd = str(SCRIPT_DIR.parent / "cloudsort/bin/prometheus/prometheus")
     cmd += " --web.enable-admin-api"
     cmd += " --config.file=" + str(SCRIPT_DIR / "config/prometheus/prometheus.yml")
     cmd += f" --storage.tsdb.path={prometheus_data_path}"
@@ -327,7 +327,7 @@ def setup_prometheus(head_ip: str, ips: List[str]) -> None:
 
 
 def setup_grafana() -> None:
-    cwd = str(SCRIPT_DIR.parent / "raysort/bin/grafana")
+    cwd = str(SCRIPT_DIR.parent / "cloudsort/bin/grafana")
     cmd = f"{cwd}/bin/grafana-server"
     free_port(GRAFANA_SERVER_PORT)
     subprocess.Popen(cmd, cwd=cwd, shell=True)  # pylint: disable=consider-using-with
@@ -383,23 +383,6 @@ def get_ray_start_cmd() -> Tuple[str, Dict, Dict]:
         "verbose_spill_logs": 0,
     }
     if cfg.system.s3_spill > 0:
-        # system_config.update(
-        #     **{
-        #         "max_io_workers": s3_spill,
-        #         "object_spilling_config": json_dump_no_space(
-        #             {
-        #                 "type": "smart_open",
-        #                 "params": {
-        #                     "uri": [
-        #                         "s3://raysort-tmp/ray-{:03d}".format(i)
-        #                         for i in range(s3_spill)
-        #                     ],
-        #                     "buffer_size": 16 * MiB,
-        #                 },
-        #             }
-        #         ),
-        #     }
-        # )
         system_config.update(
             **{
                 "max_io_workers": cfg.system.s3_spill,

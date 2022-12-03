@@ -10,7 +10,6 @@ jobs:
   pylint:
     runs-on: ubuntu-latest
     env:
-      S3_BUCKET: raysort-github-ci
       WANDB_MODE: offline
     steps:
       - name: Checkout repository
@@ -30,7 +29,7 @@ jobs:
       - name: Install project package
         run: |
           pip install -e .
-          pushd raysort/sortlib && python setup.py build_ext --inplace && popd
+          pushd cloudsort/sortlib && python setup.py build_ext --inplace && popd
 
       - name: Run linter
-        run: pylint raysort/**/*.py
+        run: pylint cloudsort/**/*.py

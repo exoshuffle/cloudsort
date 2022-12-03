@@ -9,7 +9,7 @@
     mnt_prefix: /mnt/data
     tmpfs_path: /mnt/tmpfs
     awsdir: ~/.aws
-    workdir: ~/raysort
+    workdir: ~/cloudsort
     pythondir: ~/miniconda3/envs/raysort/bin
     hosts_path: /etc/hosts
     hadoop_config_dir: /opt/hadoop/etc/hadoop
@@ -84,18 +84,18 @@
           - --exclude=.git
           - --exclude=data
           - --exclude=ray
-          - --exclude=wandb
 
     - name: Install Python dependencies
       ansible.builtin.shell: |
+        {{ pythondir }}/pip uninstall -y ray
         {{ pythondir }}/pip install -Ur {{ workdir }}/requirements/worker.txt
       changed_when: true
 
     - name: Install project packages
       ansible.builtin.shell: |
         cd {{ workdir }} && {{ pythondir }}/pip install -e .
-        rm -rf {{ workdir }}/raysort/sortlib/build
-        cd {{ workdir }}/raysort/sortlib && {{ pythondir }}/python setup.py build_ext --inplace
+        rm -rf {{ workdir }}/cloudsort/sortlib/build
+        cd {{ workdir }}/cloudsort/sortlib && {{ pythondir }}/python setup.py build_ext --inplace
       changed_when: true
 
     - name: Set soft and hard ulimit
