@@ -5,12 +5,10 @@ import json
 import logging
 import os
 import re
-import shutil
 import time
-from typing import Callable, Dict, Iterable
+from typing import Callable, Dict
 
 import ray
-import requests
 import wandb
 import yaml
 from ray.util import metrics
@@ -143,22 +141,6 @@ def symlink(src: str, dst: str, **kwargs):
         os.symlink(src, dst, **kwargs)
 
 
-def save_prometheus_snapshot():
-    try:
-        snapshot_json = requests.post(
-            "http://localhost:9090/api/v1/admin/tsdb/snapshot"
-        ).json()
-        snapshot_name = snapshot_json["data"]["name"]
-        shutil.make_archive(
-            f"/tmp/prometheus-{snapshot_name}",
-            "zip",
-            f"/tmp/prometheus/snapshots/{snapshot_name}",
-        )
-        wandb.save(f"/tmp/prometheus-{snapshot_name}.zip", base_path="/tmp")
-    except requests.exceptions.ConnectionError:
-        logging.info("Prometheus not running, skipping snapshot save")
-
-
 @ray.remote(resources={"head": 1e-3})
 class ProgressTracker:
     def __init__(self, job_cfg: JobConfig, project: str = "raysort"):
@@ -271,32 +253,5 @@ class ProgressTracker:
 
     def performance_report(self):
         self.save_trace(save_to_wandb=True)
-        # Disabling for now as this could take a long time.
-        # save_prometheus_snapshot()
         self.report_spilling()
         self.report()
-
-
-class ObjectRefRecorder:
-    def __init__(self, enabled: bool = True):
-        self._enabled = enabled
-        if not self._enabled:
-            return
-        self._filename = f"/tmp/raysort-{int(time.time())}-objects.txt"
-        self._records = []
-        with open(self._filename, "w"):
-            pass
-        symlink(self._filename, "/tmp/raysort-latest-objects.txt")
-
-    def record(self, refs: Iterable[ray.ObjectRef], get_name: Callable[[int], str]):
-        if not self._enabled:
-            return
-        for i, ref in enumerate(refs):
-            self._records.append(f"{ref.hex()} {get_name(i)}\n")
-
-    def flush(self):
-        if not self._enabled:
-            return
-        with open(self._filename, "a") as fout:
-            fout.writelines(self._records)
-        self._records = []

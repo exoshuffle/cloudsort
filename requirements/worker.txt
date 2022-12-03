@@ -6,8 +6,7 @@ numpy
 pandas
 py-spy
 pyarrow
-# ray[default]==1.12.1
-ray[default] @ https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-3.0.0.dev0-cp39-cp39-manylinux2014_x86_64.whl
+ray[default]==2.1.0
 requests
 typing_extensions
 wandb
