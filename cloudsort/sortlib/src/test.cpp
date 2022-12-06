@@ -34,23 +34,8 @@ MakeConstRecordArrays(Record *const records,
   return ret;
 }
 
-void test_file_merger() {
-  FileMerger merger(
-      {"/mnt/data0/tmp/temp/temp-00000000", "/mnt/data0/tmp/temp/temp-00000001",
-       "/mnt/data0/tmp/temp/temp-00000002",
-       "/mnt/data0/tmp/temp/temp-00000003"},
-      "/mnt/data0/tmp/temp/test-output", 100 * 1024 * 1024, 1 * 1024 * 1024);
-  merger.Run();
-}
-
 int main() {
   printf("Hello, world!\n");
-#ifdef CSORTLIB_USE_ALT_MEMORY_LAYOUT
-  printf("Using alt memory layout.\n");
-#endif
-
-  // test_file_merger();
-  // exit(0);
 
   const size_t num_reducers = 1000;
   const auto &boundaries = GetBoundaries(num_reducers);

@@ -1,9 +1,6 @@
 #ifndef __CSORTLIB_H__
 #define __CSORTLIB_H__
 
-// #define CSORTLIB_TIMEIT 1
-// #define CSORTLIB_USE_ALT_MEMORY_LAYOUT 1
-
 #include <cstring>
 #include <memory>
 #include <queue>
@@ -104,23 +101,6 @@ private:
 Array<Record> MergePartitions(const std::vector<ConstArray<Record>> &partitions,
                               bool ask_for_refills = false,
                               const std::vector<Key> &boundaries = {});
-
-class FileMerger {
-public:
-  FileMerger(const std::vector<std::string> &input_files,
-             const std::string &output_file, size_t input_batch_bytes,
-             size_t output_batch_records);
-
-  // Start merging and return the number of total bytes merged.
-  size_t Run();
-
-private:
-  const std::vector<std::string> input_files_;
-  const std::string output_file_;
-  const size_t input_batch_bytes_;
-  const size_t output_batch_records_;
-  const size_t num_inputs_;
-};
 
 } // namespace csortlib
 
