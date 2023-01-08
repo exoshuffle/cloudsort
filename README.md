@@ -10,7 +10,7 @@ To run Exoshuffle-CloudSort, you will need:
 * A head node of size `r6i.2xlarge`
 * 40 empty Amazon S3 buckets (you can use the [Terraform template](https://github.com/exoshuffle/cloudsort/tree/master/scripts/config/terraform/aws-s3-template) to create them)
 
-The easiest way to setup the head node is to launch it with the provide image [raysort-worker-20221011](https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#ImageDetails:imageId=ami-07bf3818d912ab0ed). Alternatively, install Python 3.9.13 with Anaconda, then run:
+The easiest way to setup the head node is to launch it with the provide image [raysort-worker-20230108](https://us-west-2.console.aws.amazon.com/ec2/v2/home?region=us-west-2#ImageDetails:imageId=ami-0da946239520bf5d7). Alternatively, install Python 3.9.13 with Anaconda, then run:
 
 ```bash
 pip install -Ur requirements/dev.txt

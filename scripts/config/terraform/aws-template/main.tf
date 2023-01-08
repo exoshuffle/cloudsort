@@ -15,7 +15,7 @@ provider "aws" {
 resource "aws_instance" "cluster" {
   count = var.instance_count
 
-  ami                         = "ami-07bf3818d912ab0ed" # raysort-worker-20221011
+  ami                         = "ami-0da946239520bf5d7" # raysort-worker-20230108
   instance_type               = var.instance_type
   key_name                    = "login-us-west-2"
   associate_public_ip_address = true
