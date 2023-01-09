@@ -1,6 +1,6 @@
 # Exoshuffle-CloudSort
 
-This repository is a snapshot of the code in the [2022 CloudSort Benchmark](http://sortbenchmark.org/) submission, Exoshuffle-CloudSort [TODO: link].
+This repository is a snapshot of [Exoshuffle-CloudSort](http://sortbenchmark.org/ExoshuffleCloudSort2022.pdf), the winning entry of the [2022 CloudSort Benchmark](http://sortbenchmark.org/) in the Indy category.
 
 ## Prerequisites
 
